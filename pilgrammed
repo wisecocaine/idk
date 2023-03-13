@@ -1,0 +1,99 @@
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+if Player == nil then
+    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+    Player = Players.LocalPlayer
+end
+local ContextActionService = game:GetService("ContextActionService")
+local Multitool = true
+local SpamTool = false
+local function SortTools(a,b)
+    return a:GetAttribute("Damage") > b:GetAttribute("Damage")
+end
+local function MultitoolConnection(Action, State, Input)
+    if Multitool and Player.Character then
+        local Tools = {}
+        local CurrentTool = Player.Character:FindFirstChildOfClass("Tool")
+        if State == Enum.UserInputState.Begin and CurrentTool and CurrentTool:FindFirstChild("Slash") and not string.find(CurrentTool.Name, "Pick") then
+            local Children = Player.Backpack:GetChildren()
+            if Player.Character then
+                local CharacterChildren = Player.Character:GetChildren()
+                local BackpackChildren = Children
+                Children = table.create(#BackpackChildren + #CharacterChildren)
+                table.move(BackpackChildren, 1, #BackpackChildren, 1, Children)
+                table.move(CharacterChildren, 1, #CharacterChildren, #Children+1, Children)
+            end
+            if not CurrentTool:GetAttribute("Type") then
+                if string.find(CurrentTool.Name, "Scythe") then
+                    CurrentTool:SetAttribute("Type","Scythe")
+                    for _,v in ipairs(Children) do
+                        if not v:GetAttribute("Type") and string.find(v.Name, "Scythe") then
+                            v:SetAttribute("Type","Scythe")
+                        end
+                    end
+                end
+            end
+            for _,v in ipairs(Children) do
+                if v:IsA("Tool") and v:GetAttribute("Type") == CurrentTool:GetAttribute("Type") then
+                    table.insert(Tools,v)
+                    v.Parent = Player.Character
+                end
+            end
+            table.sort(Tools,SortTools)
+            for _,v in ipairs(Tools) do
+                if Player.Character:FindFirstChild("Cooldown") then
+                    Player.Character.Cooldown:Destroy()
+                end
+                spawn(function()
+                    -- v:Activate()
+                    v.Slash:FireServer(1)
+                end)
+            end
+        elseif CurrentTool ~= nil then
+            if State == Enum.UserInputState.Begin then
+                CurrentTool:Activate()
+            elseif State == Enum.UserInputState.End then
+                CurrentTool:Deactivate()
+            end
+        end
+    end
+end
+ContextActionService:BindActionAtPriority("Toggle",function(Action, State, Input)
+    if Input.KeyCode == Enum.KeyCode.H and State == Enum.UserInputState.Begin then
+        Multitool = not Multitool
+        local Message = ""
+        if Multitool then
+            ContextActionService:BindActionAtPriority("Multitool",MultitoolConnection,false,Enum.ContextActionPriority.High.Value,Enum.UserInputType.MouseButton1)
+            Message = "Multitool is now ON!"
+        else
+            ContextActionService:UnbindAction("Multitool")
+            Message = "Multitool is now OFF!"
+        end
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "notification";
+            Text = Message;
+            Icon = "rbxassetid://2541869220";
+            Duration = 3;
+        })
+       return
+    end
+    if Input.KeyCode == Enum.KeyCode.MouseButton1 then
+        if State == Enum.UserInputState.Begin then
+            SpamTool = true
+            repeat
+                MultitoolConnection(nil,Enum.UserInputState.Begin,nil)
+                task.wait()
+            until not SpamTool
+        elseif State == Enum.UserInputState.End then
+            SpamTool = false
+        end
+    end
+end,false,Enum.ContextActionPriority.High.Value,Enum.KeyCode.H,Enum.KeyCode.MouseButton1)
+ContextActionService:BindActionAtPriority("Multitool",MultitoolConnection,false,Enum.ContextActionPriority.High.Value,Enum.UserInputType.MouseButton1)
+
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Injected!";
+    Text = "H to toggle. Hold T to spam multi tool. \nMade by Aidez";
+    Icon = "rbxassetid://2541869220";
+    Duration = 10;
+})
