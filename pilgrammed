@@ -77,7 +77,7 @@ ContextActionService:BindActionAtPriority("Toggle",function(Action, State, Input
         })
        return
     end
-    if Input.KeyCode == Enum.KeyCode.MouseButton1 then
+    if Input.KeyCode == Enum.KeyCode.LeftAlt then
         if State == Enum.UserInputState.Begin then
             SpamTool = true
             repeat
@@ -88,7 +88,7 @@ ContextActionService:BindActionAtPriority("Toggle",function(Action, State, Input
             SpamTool = false
         end
     end
-end,false,Enum.ContextActionPriority.High.Value,Enum.KeyCode.H,Enum.KeyCode.MouseButton1)
+end,false,Enum.ContextActionPriority.High.Value,Enum.KeyCode.H,Enum.KeyCode.LeftAlt)
 ContextActionService:BindActionAtPriority("Multitool",MultitoolConnection,false,Enum.ContextActionPriority.High.Value,Enum.UserInputType.MouseButton1)
 
 game.StarterGui:SetCore("SendNotification", {
